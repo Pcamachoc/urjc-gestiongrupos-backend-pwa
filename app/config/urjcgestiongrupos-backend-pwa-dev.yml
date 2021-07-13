@@ -1,0 +1,63 @@
+appName: URJC gestiongrupos - Backend PWA
+description: URJC gestiongrupos - Backend PWA - Swagger Node - N-Layer
+environment: dev
+infrastructure:
+  logger:
+    level: debug
+  authentication:
+    userRepository: mongo #Available Options: mem, mongo
+    tokenExpiration: 30 #minutes
+    tokenSecret: wearethebeast
+    bcryptSaltRounds: 12
+    users:
+    - username: client
+      password: alfa1beta2
+      enabled: true
+    groupsToAuthenticate: # User must be member of these groups to be authenticated in the app
+    - name: Clients Group
+  express:
+    servertimeout: 60000 #miliseconds
+    port: 10081
+    enableCors: true
+    upload:
+      fileUploadedMaxLength: 5 #MBytes
+      # Multipart Support using multer example
+      # uploadFolder: uploads # For multipart requests
+      # uploadApi:
+      # - apiMethod: "/api/private/file"
+      #   fields:
+      #   - name: fileuploaded
+      #   - maxCount: 1
+    privateRouting:
+      enabled: true
+      routes:
+      - route: "/api/private/*"
+  mongo:
+    mongoURL: mongodb://admin:admin@localhost:27017
+    database: urjcgestiongruposDB
+    reconnectTime: 20000 #miliseconds
+  middlewarehlf:
+    url: http://localhost:10080
+    authentication:
+      username: middlehlfuser
+      passwd: alfa1beta2    
+    apiPrefix: "/api"
+    chaincodePrefix: "private/chaincode"
+    # Invoke Chaincodes
+    vote:
+      chaincodeId: vote
+      createVoteMethod: "create"
+      findVoteByIdMethod: "findById"
+      findVotesMethod: "find"
+      findVoteByIdWithHistoryMethod: "findByIdWithHistory"
+    call:
+      chaincodeId: call
+      createCallMethod: "create"
+      findCallsMethod: "findParticipantCalls"
+      findCallByIdMethod: "findById"
+      updateCallMethod: "update"
+      deleteCallMethod: "deleteOneById"
+    # Middleware API Resources
+    channelBlockResource: "private/channel/block"
+appProperties:
+  defaultNumberOfTokens: 100

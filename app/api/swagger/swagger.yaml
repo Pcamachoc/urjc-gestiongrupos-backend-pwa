@@ -1,0 +1,980 @@
+swagger: "2.0"
+info:
+  version: "0.4.0"
+  title: URJC gestiongrupos Backend PWA
+# during dev, should point to your local machine
+host: localhost:10081
+# basePath prefixes all resource paths 
+basePath: /api
+# 
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+  - application/octet-stream
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+  - application/xml
+  
+paths:
+
+  # ##################################################################
+  # Authentication
+  # ##################################################################
+
+  /authenticate:
+    x-swagger-router-controller: auth.controller
+    post:
+      tags:
+        - "Authentication"
+      description: authenticate user
+      operationId: authenticate
+      parameters:
+        - in: header
+          name: username
+          required: true
+          type: string
+        - in: header
+          name: passwd
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/AuthenticatedResponse"
+          examples: 
+            token: |
+              eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOnsiaWQiOiJ1c2VyLXVjdmI0NGt6c2p3MHB
+              mc2VwIiwibmFtZSI6ImFkbWluIiwic3VybmFtZSI6InVzdCIsInVzZXJuYW1lIjoiYWRtaW51c3QiLCJ
+              lbWFpbCI6ImFkbWludXN0QHVzdC1nbG9iYWwuY29tIiwiZW5hYmxlZCI6dHJ1ZSwiaW5pdERhdGUiOiI
+              yMDE5LTA1LTI3VDAwOjAwOjAwLjAwMFoiLCJncm91cHMiOlt7ImlkIjoiZ3JvdXAtdWN2YjQ0bDZyanc
+              wcGh3Y3QiLCJuYW1lIjoiQWRtaW5pc3RyYXRvcnMgR3JvdXAiLCJyb2xlcyI6W3siaWQiOiJyb2xlLXV
+              jdmI0NGwxNmp3MHBnaG9wIiwibmFtZSI6IlJvbGUgTWFuYWdlciIsImZ1bmN0aW9uYWxpdGllcyI6WyJ
+              jcmVhdGVSb2xlIiwidXBkYXRlUm9sZSIsImdldFJvbGVCeUlkIiwiZ2V0QWxsUm9sZXMiLCJkZWxldGV
+              Sb2xlQnlJZCIsImFkZEZ1bmMyUm9sZSIsImRlbEZ1bmMyUm9sZSJdfSx7ImlkIjoicm9sZS11Y3ZiNDR
+              sMXFqdzBwaDJudCIsIm5hbWUiOiJVc2VyIE1hbmFnZXIiLCJmdW5jdGlvbmFsaXRpZXMiOlsiY3JlYXR
+              lVXNlciIsInVwZGF0ZVVzZXIiLCJnZXRVc2VyQnlJZCIsImdldFVzZXJzIiwiZGVsZXRlVXNlckJ5SWQ
+              iLCJhZGRHcm91cDJVc2VyIiwiZGVsR3JvdXAyVXNlciJdfSx7ImlkIjoicm9sZS11Y3ZiNDRsNTJqdzB
+              waGhjMyIsIm5hbWUiOiJHcm91cCBNYW5hZ2VyIiwiZnVuY3Rpb25hbGl0aWVzIjpbImNyZWF0ZUdyb3V
+              wIiwidXBkYXRlR3JvdXAiLCJnZXRHcm91cEJ5SWQiLCJnZXRBbGxHcm91cHMiLCJkZWxldGVHcm91cEJ
+              5SWQiXX0seyJpZCI6InJvbGUtdWN2YjQ0bDY3ancwcGhxaTciLCJuYW1lIjoiQ2FtcGFpZ24gTWFuYWd
+              lciIsImZ1bmN0aW9uYWxpdGllcyI6WyJjcmVhdGVDYW1wYWlnbiIsInVwZGF0ZUNhbXBhaWduIiwiZ2V
+              0Q2FtcGFpZ25CeUlkIiwiZ2V0QWxsQ2FtcGFpZ25zIiwiZGVsZXRlQ2FtcGFpZ25CeUlkIl19XX1dfSw
+              iaWF0IjoxNTU5MDUwMTkyLCJleHAiOjE4NzQ0MTAxOTJ9.gEkxw9yfFIzoJS4axAqlI_ELvEhgQLb5iA
+              ne2xUXxBE
+        "401":
+          description: Not authenticated
+          schema:
+            $ref: "#/definitions/UnauthenticatedResponse"
+          examples:
+            error:
+              code: 401
+              message: User not authenticated
+              description: User not authenticated in [Auth Controller]:authenticate
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 500
+              message: Internal Server Error
+              description: Internal Server Error in [Auth Controller]:authenticate
+
+  # ##################################################################
+  # Votes
+  # ##################################################################
+
+  /private/votes: 
+    x-swagger-router-controller: vote.controller
+    post: 
+      tags: 
+        - "Votes"
+      description: Create Vote
+      operationId: createVote
+      parameters: 
+        - in: header 
+          name: authorization 
+          description: Security Token
+          required: true 
+          type: string 
+        - in: body 
+          name: voteData
+          description: Vote data
+          schema: 
+            $ref: "#/definitions/VoteData"
+      responses: 
+        "201": 
+          description: Success 
+          schema: 
+            $ref: "#/definitions/VoteDataResponse"
+          headers:
+            authorization:
+              description: Security Token
+              type: string
+          examples:
+            application/json:
+              {              
+                "id": "vote-XXXXXX",
+	              "idParticipant": "88h",
+
+	              "creationDate": "2019-05-28T00:30:00.000Z",
+	              "idCall": "call-ucvb83kzsjw0pfsep",
+	              "proposalsVote": [
+		              {"idVoted": "001", "option": "2"}, {"idVoted": "002", "option": "1"}, {"idVoted": "003", "option": "3"}
+	              ],
+              }
+        "401":
+          description: Not authenticated in the system
+          schema:
+            $ref: "#/definitions/UnauthenticatedResponse"
+          examples:
+            error:
+              code: 401
+              message: Security header not received
+              description: Security header not received in [Auth Middleware]:authenticate
+        "403":
+          description: Not authorized to execute this method
+          schema:
+            $ref: "#/definitions/UnauthorizedResponse"
+          examples:
+            error:
+              code: 403
+              message: User not authorized
+              description: User not authorized in [Vote Controller]:createVote
+        default: 
+          description: Error 
+          schema: 
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 500
+              message: Internal Server Error
+              description: Internal Server Error in [Vote Controller]:createVote
+    get: 
+      tags: 
+        - "Votes" 
+      description: Get votes
+      operationId: getVotes
+      parameters: 
+        - in: header 
+          name: authorization 
+          description: Security Token 
+          required: true 
+          type: string 
+      responses: 
+        "200": 
+          description: Success 
+          schema: 
+            $ref: "#/definitions/VotesDataListResponse"
+          headers:
+            authorization:
+              description: Security Token
+              type: string
+          examples:
+            application/json: 
+              {              
+                "id": "vote-XXXXXX",
+	              "idParticipant": "88h",
+	              "creationDate": "2019-05-28T00:30:00.000Z",
+	              "idCall": "call-ucvb83kzsjw0pfsep",
+	              "proposalsVote": [
+		              {"idVoted": "001", "option": "2"}, {"idVoted": "002", "option": "1"}, {"idVoted": "003", "option": "3"}
+	              ],
+              }
+        "401":
+          description: Not authenticated in the system
+          schema:
+            $ref: "#/definitions/UnauthenticatedResponse"
+          examples:
+            error:
+              code: 401
+              message: Security header not received
+              description: Security header not received in [Auth Middleware]:authenticate
+        "403":
+          description: Not authorized to execute this method
+          schema:
+            $ref: "#/definitions/UnauthorizedResponse"
+          examples:
+            error:
+              code: 403
+              message: User not authorized
+              description: User not authorized in [Vote Controller]:getVotes
+        "404":
+          description: Votes not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 404
+              message: No votes found
+              description: No votes found in [Vote Controller]:getVotes
+        default: 
+          description: Error 
+          schema: 
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 500
+              message: Internal Server Error
+              description: Internal Server Error in [Vote Controller]:getVotes
+
+  /private/votes/{idVote}: 
+    x-swagger-router-controller: vote.controller
+    get: 
+      tags: 
+        - "Votes" 
+      description: Get vote by Id
+      operationId: getVoteById
+      parameters: 
+        - in: header 
+          name: authorization 
+          description: Security Token 
+          required: true 
+          type: string
+        - in: path
+          name: idVote
+          description: idVote
+          required: true 
+          type: string 
+      responses: 
+        "200": 
+          description: Success 
+          schema: 
+            $ref: "#/definitions/VoteDataResponse"
+          headers:
+            authorization:
+              description: Security Token
+              type: string
+          examples:
+            application/json: 
+              {              
+                "id": "vote-XXXXXX",
+	              "idParticipant": "88h",
+	              "creationDate": "2019-05-28T00:30:00.000Z",
+	              "idCall": "call-ucvb83kzsjw0pfsep",
+	              "proposalsVote": [
+		              {"idVoted": "001", "option": "2"}, {"idVoted": "002", "option": "1"}, {"idVoted": "003", "option": "3"}
+	              ],
+              }
+        "401":
+          description: Not authenticated in the system
+          schema:
+            $ref: "#/definitions/UnauthenticatedResponse"
+          examples:
+            error:
+              code: 401
+              message: Security header not received
+              description: Security header not received in [Auth Middleware]:authenticate
+        "403":
+          description: Not authorized to execute this method
+          schema:
+            $ref: "#/definitions/UnauthorizedResponse"
+          examples:
+            error:
+              code: 403
+              message: User not authorized
+              description: User not authorized in [Vote Controller]:getVoteById
+        "404":
+          description: Vote not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 404
+              message: Vote not found
+              description: Vote not found in [Vote Controller]:getVoteById
+        default: 
+          description: Error 
+          schema: 
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 500
+              message: Internal Server Error
+              description: Internal Server Error in [Vote Controller]:getVoteById
+
+  /private/voteIdByParameters/{idCall}: 
+    x-swagger-router-controller: vote.controller
+    get: 
+      tags: 
+        - "Votes" 
+      description: Get voteId by Parameters
+      operationId: getVoteIdByParameters
+      parameters: 
+        - in: header 
+          name: authorization 
+          description: Security Token 
+          required: true 
+          type: string
+        - in: path
+          name: idCall
+          description: idCall
+          required: true 
+          type: string
+      responses: 
+        "200": 
+          description: Success 
+          schema: 
+            $ref: "#/definitions/VoteParametersResponse"
+          headers:
+            authorization:
+              description: Security Token
+              type: string
+          examples:
+            application/json: 
+              {              
+                "id": "vote-XXXXXX"
+              }
+        "401":
+          description: Not authenticated in the system
+          schema:
+            $ref: "#/definitions/UnauthenticatedResponse"
+          examples:
+            error:
+              code: 401
+              message: Security header not received
+              description: Security header not received in [Auth Middleware]:authenticate
+        "403":
+          description: Not authorized to execute this method
+          schema:
+            $ref: "#/definitions/UnauthorizedResponse"
+          examples:
+            error:
+              code: 403
+              message: User not authorized
+              description: User not authorized in [Vote Controller]:VoteParameters
+        "404":
+          description: Vote not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 404
+              message: Vote not found
+              description: Vote not found in [Vote Controller]:VoteParameters
+        default: 
+          description: Error 
+          schema: 
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 500
+              message: Internal Server Error
+              description: Internal Server Error in [Vote Controller]:VoteParameters
+  
+  /private/votesHistory/{idVote}: 
+    x-swagger-router-controller: vote.controller
+    get: 
+      tags: 
+        - "Votes" 
+      description: Get vote by Id with history
+      operationId: getVoteByIdWithHistory
+      parameters: 
+        - in: header 
+          name: authorization 
+          description: Security Token 
+          required: true 
+          type: string
+        - in: path
+          name: idVote
+          description: idVote
+          required: true 
+          type: string 
+      responses: 
+        "200": 
+          description: Success 
+          schema: 
+            $ref: "#/definitions/VoteDataHistoryResponse"
+          headers:
+            authorization:
+              description: Security Token
+              type: string
+          examples:
+            application/json: 
+              {              
+                "id": "vote-XXXXXX",
+	              "idParticipant": "88h",
+	              "creationDate": "2019-05-28T00:30:00.000Z",
+	              "idCall": "call-ucvb83kzsjw0pfsep",
+	              "proposalsVote": [
+		              {"idVoted": "001", "option": "2"}, {"idVoted": "002", "option": "1"}, {"idVoted": "003", "option": "3"}
+                ],
+                "tx_id": "0eb8c8dd8df3c1b5fe0e82ec94ea5b9d0cbab9229435b10e60e17ad70e47e73f",
+              }
+        "401":
+          description: Not authenticated in the system
+          schema:
+            $ref: "#/definitions/UnauthenticatedResponse"
+          examples:
+            error:
+              code: 401
+              message: Security header not received
+              description: Security header not received in [Auth Middleware]:authenticate
+        "403":
+          description: Not authorized to execute this method
+          schema:
+            $ref: "#/definitions/UnauthorizedResponse"
+          examples:
+            error:
+              code: 403
+              message: User not authorized
+              description: User not authorized in [Vote Controller]:getVoteByIdWithHistory
+        "404":
+          description: Vote not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 404
+              message: Vote not found
+              description: Vote not found in [Vote Controller]:getVoteByIdWithHistory
+        default: 
+          description: Error 
+          schema: 
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 500
+              message: Internal Server Error
+              description: Internal Server Error in [Vote Controller]:getVoteByIdWithHistory
+
+
+  # ##################################################################
+  # Calls
+  # ##################################################################
+  /private/calls: 
+    x-swagger-router-controller: call.controller
+    get: 
+      tags: 
+        - "Calls" 
+      description: Get calls
+      operationId: getCalls
+      parameters: 
+        - in: header 
+          name: authorization 
+          description: Security Token 
+          required: true 
+          type: string 
+      responses: 
+        "200": 
+          description: Success 
+          schema: 
+            $ref: "#/definitions/CallsDataListResponse"
+          headers:
+            authorization:
+              description: Security Token
+              type: string
+          examples:
+            application/json: {
+                "id": "call-ucvb83kzsjw0pfsep",
+                "name": "test call 1",
+                "company": "URJC-Gestiongrupos",
+                "initDate": "2019-06-03T00:00:00.000Z",
+                "endDate": "2019-09-15T00:00:00.000Z",
+                "currentDate": "2019-09-16T00:00:00.000Z",
+                "agenda": [{"title": "archive_ucvb83kzsjw0pfsep.pdf", "data": "<<BASE64>>"}],
+                "organizers": [
+                  {"name": "Ana", "position": "Presidenta"}, 
+                  {"name": "Juan Carlos", "position": "Secretario"},
+                ],
+                "totalShares": 200000,
+	              "minShares": 120000,
+                "options": ["A favor", "En contra", "Abstención", "En blanco"],
+	   	          "participants": [
+	   		          {"id": "11a", "name": "Cristina Castaño", "shares": 200},
+                  {"id": "22b", "name": "Ramón González", "shares": 100}, 
+                 ],
+                "counting": [],
+                "currentResult": [],
+          }
+        "401":
+          description: Not authenticated in the system
+          schema:
+            $ref: "#/definitions/UnauthenticatedResponse"
+          examples:
+            error:
+              code: 401
+              message: Security header not received
+              description: Security header not received in [Auth Middleware]:authenticate
+        "403":
+          description: Not authorized to execute this method
+          schema:
+            $ref: "#/definitions/UnauthorizedResponse"
+          examples:
+            error:
+              code: 403
+              message: User not authorized
+              description: User not authorized in [Call Controller]:getCalls
+        "404":
+          description: Calls not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 404
+              message: No calls found
+              description: No calls found in [Call Controller]:getCalls
+        default: 
+          description: Error 
+          schema: 
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 500
+              message: Internal Server Error
+              description: Internal Server Error in [Call Controller]:getCalls
+
+  /private/calls/{idCall}: 
+    x-swagger-router-controller: call.controller
+    get: 
+      tags: 
+        - "Calls" 
+      description: Get call by Id
+      operationId: getCallById
+      parameters: 
+        - in: header 
+          name: authorization 
+          description: Security Token 
+          required: true 
+          type: string
+        - in: path
+          name: idCall
+          description: idCall
+          required: true 
+          type: string 
+      responses: 
+        "200": 
+          description: Success 
+          schema: 
+            $ref: "#/definitions/CallDataResponse"
+          headers:
+            authorization:
+              description: Security Token
+              type: string
+          examples:
+            application/json: {
+                "id": "call-ucvb83kzsjw0pfsep",
+                "name": "test call 1",
+                "company": "URJC-Gestiongrupos",
+                "initDate": "2019-06-03T00:00:00.000Z",
+                "endDate": "2019-09-15T00:00:00.000Z",
+                "currentDate": "2019-09-16T00:00:00.000Z",
+                "agenda": [{"title": "archive_ucvb83kzsjw0pfsep.pdf", "data": "<<BASE64>>"}],
+                "organizers": [
+                  {"name": "Ana", "position": "Presidenta"}, 
+                  {"name": "Juan Carlos", "position": "Secretario"},
+                ],
+                "totalShares": 200000,
+	              "minShares": 120000,
+                "options": ["A favor", "En contra", "Abstención", "En blanco"],
+	   	          "participants": [
+	   		          {"id": "11a", "name": "Cristina Castaño", "shares": 200},
+                  {"id": "22b", "name": "Ramón González", "shares": 100}, 
+                 ],
+                "counting": [],
+                "currentResult": [],
+          }
+        "401":
+          description: Not authenticated in the system
+          schema:
+            $ref: "#/definitions/UnauthenticatedResponse"
+          examples:
+            error:
+              code: 401
+              message: Security header not received
+              description: Security header not received in [Auth Middleware]:authenticate
+        "403":
+          description: Not authorized to execute this method
+          schema:
+            $ref: "#/definitions/UnauthorizedResponse"
+          examples:
+            error:
+              code: 403
+              message: User not authorized
+              description: User not authorized in [Call Controller]:getCallById
+        "404":
+          description: Call not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 404
+              message: Call not found
+              description: Call not found in [Call Controller]:getCallById
+        default: 
+          description: Error 
+          schema: 
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 500
+              message: Internal Server Error
+              description: Internal Server Error in [Call Controller]:getCallById
+
+  /private/calls/{idCall}/summary: 
+    x-swagger-router-controller: call.controller
+    get: 
+      tags: 
+        - "Calls" 
+      description: get votes summary from a call
+      operationId: getBallotResult
+      parameters: 
+        - in: header 
+          name: authorization 
+          description: Security Token 
+          required: true 
+          type: string 
+        - in: path
+          name: idCall
+          description: idCall
+          required: true 
+          type: string 
+      responses:        
+        default: 
+          description: Error 
+          schema: 
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 500
+              message: Internal Server Error
+              description: Internal Server Error in [Call Controller]:getBallotResult
+
+  # ##################################################################
+  # Blocks
+  # ##################################################################
+
+  /private/blocks/{transactionId}:
+    x-swagger-router-controller: block.controller
+    get:
+      tags:
+        - "Blocks"
+      description: get Block by Transaction Id
+      operationId: getBlockByTransactionId
+      parameters:
+        - in: header
+          name: authorization
+          description: Security Token
+          required: true
+          type: string
+        - in: path
+          name: transactionId
+          description: Blockchain Transaction Id
+          type: string
+          required: true        
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/BlockInfoResponse"
+          headers:
+            authorization:
+              description: Security Token
+              type: string
+          examples:
+            application/json: 
+              {
+                tx_id: '1f4f5c4b6ac30c48a2fcb970ad70329534b62bd49cf9678440adfee068dbd05e',
+                block_id: 29
+              }
+        "401":
+          description: Not authenticated in the system
+          schema:
+            $ref: "#/definitions/UnauthenticatedResponse"
+          examples:
+            error:
+              code: 401
+              message: Security header not received
+              description: Security header not received in [Auth Middleware]:authenticate
+        "403":
+          description: Not authorized to execute this method
+          schema:
+            $ref: "#/definitions/UnauthorizedResponse"
+          examples:
+            error:
+              code: 403
+              message: User not authorized
+              description: User not authorized in [Block Controller]:getBlockByTransactionId
+        "409":
+          description: wallet not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 409
+              message: wallet not found
+              description: wallet not found in [Block Controller]:getBlockByTransactionId
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+          examples:
+            error:
+              code: 500
+              message: Internal Server Error
+              description: Internal Server Error in [Block Controller]:getBlockByTransactionId
+  /swagger:
+    x-swagger-pipe: swagger_raw
+
+# complex objects have schema definitions
+definitions:
+
+  # ##################################################################
+  # REQUESTS
+  # ##################################################################
+
+  VoteData: 
+    type: object
+    properties:
+      idParticipant: 
+        type: string 
+      creationDate:
+        type: string
+        format: date-time
+      idCall:
+        type: string
+      proposalsVote:
+        type: array
+        items:
+          $ref: "#/definitions/IdvotedOptionObject"
+
+  # ##################################################################
+  # RESPONSES
+  # ##################################################################
+
+  # Error Responses
+
+  InnerErrorResponse:
+    type: object
+    properties:
+      code:
+        type: number
+      message:
+        type: string
+      description:
+        type: string
+  
+  ErrorResponse:
+    type: object
+    properties:
+      error:
+        $ref: "#/definitions/InnerErrorResponse"
+        
+  # Authentication Responses
+
+  AuthenticatedResponse:
+    required:
+      - token
+    properties:
+      token:
+        type: string
+
+  UnauthenticatedResponse:
+    type: object
+    properties:
+      error:
+        $ref: "#/definitions/InnerErrorResponse"
+
+  # Authorization Responses
+
+  UnauthorizedResponse:
+    type: object
+    properties:
+      error:
+        $ref: "#/definitions/InnerErrorResponse"
+
+  # Vote Responses
+
+  IdvotedOptionObject:
+    type: object
+    properties:
+      idVoted:
+        type: string
+      option:
+        type: string
+
+  VoteDataResponse: 
+    type: object      
+    properties:
+      id:
+        type: string
+      idParticipant: 
+        type: string 
+      creationDate:
+        type: string
+        format: date-time
+      idCall:
+        type: string
+      proposalsVote:
+        type: array
+        items:
+          $ref: "#/definitions/IdvotedOptionObject"
+
+  VoteDataHistoryResponse: 
+    type: object      
+    properties:
+      id:
+        type: string
+      idParticipant: 
+        type: string 
+      creationDate:
+        type: string
+        format: date-time
+      idCall:
+        type: string
+      proposalsVote:
+        type: array
+        items:
+          $ref: "#/definitions/IdvotedOptionObject"
+      tx_id:
+        type: string
+
+  VotesDataListResponse: 
+    type: object
+    properties:
+      totalElements:
+        type: number
+      elements:
+        type: array
+        items: 
+          $ref: "#/definitions/VoteDataResponse"
+
+  VoteParametersResponse:
+    type: object
+    properties:
+      id:
+        type: string
+
+  # Calls Responses
+
+  ImageObject:
+    type: object
+    properties:
+      title:
+        type: string
+      data:
+        type: string
+        format: byte
+
+  NamePositionObject:
+    type: object
+    properties:
+      name:
+        type: string
+      position:
+        type: string
+
+  IdDescriptionObject:
+    type: object
+    properties:
+      id:
+        type: string
+      description:
+        type: string
+
+  IdNameSharesObject:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      shares:
+        type: integer
+
+  IdvotedIdparticipantOptionObject:
+    type: object
+    properties:
+      idVoted:
+        type: string
+      idParticipant:
+        type: string
+      option:
+        type: string
+
+  IdvotedOptionSharesObject:
+    type: object
+    properties:
+      idVoted:
+        type: string
+      option:
+        type: string
+      shares:
+        type: integer
+
+  CallDataResponse: 
+    type: object      
+    properties:
+      id:
+        type: string
+      name: 
+        type: string 
+      company: 
+        type: string
+      initDate:
+        type: string
+        format: date-time
+      endDate:
+        type: string
+        format: date-time
+      currentDate:
+        type: string
+        format: date-time
+      agenda: 
+        type: array
+        items:
+          $ref: "#/definitions/ImageObject"
+      organizers:
+        type: array
+        items:
+          $ref: "#/definitions/NamePositionObject"
+      totalShares:
+        type: integer
+      minShares:
+        type: integer
+      proposals:
+        type: array
+        items:
+          $ref: "#/definitions/IdDescriptionObject"
+      options:
+        type: array
+        items:
+          type: string
+      participants:
+        type: array
+        items: 
+          $ref: "#/definitions/IdNameSharesObject"
+      currentResult:
+        type: array
+        items:
+          $ref: "#/definitions/IdvotedIdparticipantOptionObject"
+      counting:
+        type: array
+        items:
+          $ref: "#/definitions/IdvotedOptionSharesObject"
+
+  CallsDataListResponse: 
+    type: object
+    properties:
+      totalElements:
+        type: number
+      elements:
+        type: array
+        items: 
+          $ref: "#/definitions/CallDataResponse"
+
+  # Block Responses
+  BlockInfoResponse:
+    type: object
+    properties:
+      tx_id: 
+        type: string
+      block_id: 
+        type: integer
+        format: int32
